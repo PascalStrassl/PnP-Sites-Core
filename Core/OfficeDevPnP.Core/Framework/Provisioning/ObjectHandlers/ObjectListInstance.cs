@@ -817,9 +817,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 l => l.RootFolder,
                 l => l.BaseType,
                 l => l.BaseTemplate
-#if !SP2013
 , l => l.MajorWithMinorVersionsLimit
 , l => l.MajorVersionLimit
+#if !SP2013
 #endif
 );
             web.Context.ExecuteQueryRetry();
@@ -917,12 +917,13 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                         existingList.EnableVersioning = templateList.EnableVersioning;
                         isDirty = true;
                     }
-#if !SP2013
+
                     if (existingList.MajorVersionLimit != templateList.MaxVersionLimit)
                     {
                         existingList.MajorVersionLimit = templateList.MaxVersionLimit;
                         isDirty = true;
                     }
+#if !SP2013
 #endif
                     if (existingList.BaseType == BaseType.DocumentLibrary)
                     {
@@ -1226,8 +1227,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 if (list.EnableVersioning)
                 {
 #if !SP2013
-                    createdList.MajorVersionLimit = list.MaxVersionLimit;
+                    //createdList.MajorVersionLimit -> now also works on CSOM for 2013
 #endif
+                    createdList.MajorVersionLimit = list.MaxVersionLimit;
+
                     // DraftVisibilityType.Approver is available only when the EnableModeration option of the list is true
                     if (DraftVisibilityType.Approver ==
                         (DraftVisibilityType)list.DraftVersionVisibility)
