@@ -949,6 +949,7 @@ namespace Microsoft.SharePoint.Client
             }
 
             var folderName = serverRelativePageUrl.Substring(0, serverRelativePageUrl.LastIndexOf("/", StringComparison.Ordinal));
+            web.EnsureFolder(folderName);
             var folder = web.GetFolderByServerRelativeUrl(folderName);
             folder.Files.AddTemplateFile(serverRelativePageUrl, TemplateFileType.WikiPage);
 
