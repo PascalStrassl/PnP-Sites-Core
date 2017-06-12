@@ -48,8 +48,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     directoryFiles.AddRange(directory.GetDirectoryFiles(metadataProperties));
                 }
 
-                foreach (var file in template.Files.Union(directoryFiles))
+                var filesToProcess = template.Files.Union(directoryFiles).ToArray();
+                var currentFileIndex = 0;
+                foreach (var file in filesToProcess)
                 {
+                    currentFileIndex++;
+                    WriteMessage($"File|{file.Src}|{currentFileIndex}|{filesToProcess.Length}", ProvisioningMessageType.Progress);
                     var folderName = parser.ParseString(file.Folder);
 
                     if (folderName.ToLower().StartsWith((web.ServerRelativeUrl.ToLower())))
@@ -184,6 +188,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                 }
             }
+            WriteMessage("Done processing files",ProvisioningMessageType.Completed);
             return parser;
         }
 
@@ -384,7 +389,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
             foreach (var list in lists)
             {
-                xml = Regex.Replace(xml, list.Id.ToString(), string.Format("{{listid:{0}}}", list.Title), RegexOptions.IgnoreCase);
+                xml = Regex.Replace(xml, list.Id.ToString(), $"{{listid:{list.Title}}}", RegexOptions.IgnoreCase);
             }
             xml = Regex.Replace(xml, web.Id.ToString(), "{siteid}", RegexOptions.IgnoreCase);
             if (web.ServerRelativeUrl != "/")
@@ -455,7 +460,26 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
             {
                 if (!String.IsNullOrEmpty(template.Connector.GetContainer()))
                 {
-                    container = String.Format(@"{0}\{1}", template.Connector.GetContainer(), container);
+                    if (container.StartsWith("/"))
+                    {
+                        container = container.TrimStart("/".ToCharArray());
+                    }
+
+                    if (template.Connector.GetType() == typeof(Connectors.AzureStorageConnector))
+                    {
+                        if (template.Connector.GetContainer().EndsWith("/"))
+                        {
+                            container = $@"{template.Connector.GetContainer()}{container}";
+                        }
+                        else
+                        {
+                            container = $@"{template.Connector.GetContainer()}/{container}";
+                        }
+                    }
+                    else
+                    {
+                        container = $@"{template.Connector.GetContainer()}\{container}";
+                    }
                 }
             }
             else
