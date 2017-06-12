@@ -355,8 +355,10 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         }
 
 
-        public override ProvisioningTemplate ExtractObjects(Web web, ProvisioningTemplate template, ProvisioningTemplateCreationInformation creationInfo)
+        public override ProvisioningTemplate ExtractObjects(Web web, ProvisioningTemplate template,
+            ProvisioningTemplateCreationInformation creationInfo)
         {
+
             using (var scope = new PnPMonitoredScope(this.Name))
             {
                 web.EnsureProperties(w => w.HasUniqueRoleAssignments, w => w.Title);
@@ -396,7 +398,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     associatedGroupIds.Add(ownerGroup.Id);
                     foreach (var member in ownerGroup.Users)
                     {
-                        owners.Add(new User() { Name = member.LoginName });
+                        owners.Add(new User() {Name = member.LoginName});
                     }
                 }
                 if (!memberGroup.ServerObjectIsNull.Value)
@@ -404,7 +406,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     associatedGroupIds.Add(memberGroup.Id);
                     foreach (var member in memberGroup.Users)
                     {
-                        members.Add(new User() { Name = member.LoginName });
+                        members.Add(new User() {Name = member.LoginName});
                     }
                 }
                 if (!visitorGroup.ServerObjectIsNull.Value)
@@ -412,7 +414,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     associatedGroupIds.Add(visitorGroup.Id);
                     foreach (var member in visitorGroup.Users)
                     {
-                        visitors.Add(new User() { Name = member.LoginName });
+                        visitors.Add(new User() {Name = member.LoginName});
                     }
                 }
                 var siteSecurity = new SiteSecurity();
@@ -421,8 +423,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 siteSecurity.AdditionalVisitors.AddRange(visitors);
 
                 var query = from user in web.SiteUsers
-                            where user.IsSiteAdmin
-                            select user;
+                    where user.IsSiteAdmin
+                    select user;
                 var allUsers = web.Context.LoadQuery(query);
 
                 web.Context.ExecuteQueryRetry();
@@ -430,7 +432,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                 var admins = new List<User>();
                 foreach (var member in allUsers)
                 {
-                    admins.Add(new User() { Name = member.LoginName });
+                    admins.Add(new User() {Name = member.LoginName});
                 }
                 siteSecurity.AdditionalAdministrators.AddRange(admins);
 
@@ -453,7 +455,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
 
                     if (web.IsSubSite())
                     {
-                        WriteMessage("You are requesting to export sitegroups from a subweb. Notice that ALL sitegroups from the site collection are included in the result.", ProvisioningMessageType.Warning);
+                        WriteMessage(
+                            "You are requesting to export sitegroups from a subweb. Notice that ALL sitegroups from the site collection are included in the result.",
+                            ProvisioningMessageType.Warning);
                     }
                     foreach (var group in web.SiteGroups.AsEnumerable().Where(o => !associatedGroupIds.Contains(o.Id)))
                     {
@@ -470,11 +474,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                             Owner = ReplaceGroupTokens(web, group.Owner.LoginName),
                             RequestToJoinLeaveEmailSetting = group.RequestToJoinLeaveEmailSetting
                         };
-
+                        try
+                        {
                             foreach (var member in group.Users)
                             {
                                 scope.LogDebug("Processing member {0} of group {0}", member.LoginName, group.Title);
-                                siteGroup.Members.Add(new User() { Name = member.LoginName });
+                                siteGroup.Members.Add(new User() {Name = member.LoginName});
                             }
                             siteSecurity.SiteGroups.Add(siteGroup);
                         }
@@ -487,13 +492,15 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     }
                 }
 
-                var webRoleDefinitions = web.Context.LoadQuery(web.RoleDefinitions.Include(r => r.Name, r => r.Description, r => r.BasePermissions, r => r.RoleTypeKind));
+                var webRoleDefinitions =
+                    web.Context.LoadQuery(web.RoleDefinitions.Include(r => r.Name, r => r.Description,
+                        r => r.BasePermissions, r => r.RoleTypeKind));
                 web.Context.ExecuteQueryRetry();
 
                 if (web.HasUniqueRoleAssignments)
                 {
-                    
-                    var permissionKeys = Enum.GetNames(typeof(PermissionKind));
+
+                    var permissionKeys = Enum.GetNames(typeof (PermissionKind));
                     if (!web.IsSubSite())
                     {
                         foreach (var webRoleDefinition in webRoleDefinitions)
@@ -510,7 +517,7 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                 {
                                     scope.LogDebug("Processing custom permissionKey definition {0}", permissionKey);
                                     var permissionKind =
-                                        (PermissionKind)Enum.Parse(typeof(PermissionKind), permissionKey);
+                                        (PermissionKind) Enum.Parse(typeof (PermissionKind), permissionKey);
                                     if (webRoleDefinition.BasePermissions.Has(permissionKind))
                                     {
                                         modelRoleDefinitions.Permissions.Add(permissionKind);
@@ -556,7 +563,8 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                                     modelRoleAssignment.RoleDefinition = roleDefinitionValue;
                                     if (webRoleAssignment.Member.PrincipalType == PrincipalType.SharePointGroup)
                                     {
-                                        modelRoleAssignment.Principal = ReplaceGroupTokens(web, webRoleAssignment.Member.LoginName);
+                                        modelRoleAssignment.Principal = ReplaceGroupTokens(web,
+                                            webRoleAssignment.Member.LoginName);
                                     }
                                     else
                                     {
@@ -577,8 +585,9 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
                     template = CleanupEntities(template, creationInfo.BaseTemplate);
 
                 }
+
+                return template;
             }
-            return template;
         }
 
         private string ReplaceGroupTokens(Web web, string loginName)
