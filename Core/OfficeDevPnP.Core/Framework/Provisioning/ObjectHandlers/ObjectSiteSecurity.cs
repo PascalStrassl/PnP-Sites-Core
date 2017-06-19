@@ -675,6 +675,12 @@ namespace OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers
         {
             if (!_willProvision.HasValue)
             {
+                if (template.Security.BreakRoleInheritance)
+                {
+                    _willProvision = true;
+                    return _willProvision.Value;
+                }
+
                 _willProvision = (template.Security.AdditionalAdministrators.Any() ||
                                   template.Security.AdditionalMembers.Any() ||
                                   template.Security.AdditionalOwners.Any() ||
